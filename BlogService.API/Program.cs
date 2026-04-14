@@ -121,7 +121,7 @@ var app = builder.Build();
 app.UseExceptionHandler();
 
 // Configure the HTTP request pipeline.
-
+app.UseCors("AllowPortal");
     app.UseSwagger();
     app.UseSwaggerUI();
 
@@ -129,7 +129,7 @@ app.UseExceptionHandler();
 app.UseHttpsRedirection();
 
 // Enable CORS explicitly
-app.UseCors("AllowPortal");
+
 
 // Use Tenant Middleware
 app.UseMiddleware<TenantMiddleware>();
