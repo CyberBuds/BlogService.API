@@ -109,7 +109,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowPortal", policy =>
     {
-        policy.WithOrigins("http://localhost:3000")
+        policy.WithOrigins("http://localhost:3000","https://blogops-platform.vercel.app","https://blog-admin-panel-alpha.vercel.app")
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
