@@ -4,6 +4,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="BCrypt.Net-Next" Version="3.5.0" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\BlogService.Core\BlogService.Core.csproj" />
     <ProjectReference Include="..\BlogService.Data\BlogService.Data.csproj" />
   </ItemGroup>

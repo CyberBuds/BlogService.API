@@ -18,7 +18,7 @@ namespace BlogService.Data
         }
 
         public DbSet<Tenant> Tenants { get; set; }
-        public DbSet<User> Users { get; set; }
+        public DbSet<User> Users { get; set; } 
         public DbSet<Blog> Blogs { get; set; }
         public DbSet<Category> Categories { get; set; }
         public DbSet<Tag> Tags { get; set; }
@@ -44,9 +44,7 @@ namespace BlogService.Data
             modelBuilder.Entity<PageView>().HasQueryFilter(e => EF.Property<string>(e, "TenantId") == _tenantService.GetTenantId());
             modelBuilder.Entity<Like>().HasQueryFilter(e => EF.Property<string>(e, "TenantId") == _tenantService.GetTenantId());
             // User entity isolation strategy (some systems share users, some don't. We'll isolate).
-            modelBuilder.Entity<User>().HasQueryFilter(e => EF.Property<string>(e, "TenantId") == _tenantService.GetTenantId());
-
-            // Many-to-Many Relationships
+           // Many-to-Many Relationships
             modelBuilder.Entity<Blog>()
                 .HasMany(b => b.Categories)
                 .WithMany(c => c.Blogs)

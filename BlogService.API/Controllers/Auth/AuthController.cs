@@ -1,3 +1,5 @@
+using BlogService.Service.Interface;
+using Humanizer;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Threading.Tasks;
@@ -8,13 +10,24 @@ namespace BlogService.API.Controllers.Auth
     [Route("api/v1/auth")]
     public class AuthController : ControllerBase
     {
+        private readonly ITokenService _tokenService;
+        public AuthController(ITokenService tokenService)
+        {
+            _tokenService = tokenService;
+        }
+
         // 1. POST /api/v1/auth/login
         [HttpPost("login")]
-        public async Task<IActionResult> Login()
+        public async Task<IActionResult> Login(string username, string password)
         {
-            await Task.Delay(10);
-            return Ok(new { Token = "dummy-jwt-token" });
+
+            var res = await _tokenService.Login(username, password);
+            return Ok(res);
+            
+           
         }
+
+      
 
         // 2. POST /api/v1/auth/register
         [HttpPost("register")]

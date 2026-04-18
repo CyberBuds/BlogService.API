@@ -2,7 +2,9 @@ using BlogService.API.Middleware;
 using BlogService.Core.Interfaces;
 using BlogService.Data;
 using BlogService.Repository;
+using BlogService.Repository.Auth;
 using BlogService.Service;
+using BlogService.Service.Interface;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
@@ -37,12 +39,14 @@ builder.Services.AddDbContext<BlogDbContext>(options =>
 builder.Services.AddScoped<ITenantService, TenantService>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped< ITokenRepository, AuthRepository >();
+builder.Services.AddScoped<ITokenService, TokenService>();
 
 // Exception Handler
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
-// JWT Authentication
+// JWT Authentication 
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey = jwtSettings["Key"];
 if(string.IsNullOrEmpty(secretKey)) secretKey = "SuperSecretKeyThatMustBeAtLeast32BytesLong!";
@@ -66,7 +70,7 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(key)
     };
 });
-
+builder.Services.AddAuthorization();
 // Swagger/OpenAPI with JWT Auth & TenantId Header support
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>

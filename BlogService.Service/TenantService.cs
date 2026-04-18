@@ -11,7 +11,7 @@ namespace BlogService.Service
             return _tenantId;
         }
 
-        public void SetTenantId(string tenantId)
+        public void SetTenantId(string tenantId) 
         {
             _tenantId = tenantId;
         }
