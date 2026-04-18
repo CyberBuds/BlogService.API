@@ -21,9 +21,9 @@ namespace BlogService.API.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll() 
         {
-            var blogs = await _unitOfWork.Repository<Blog>().GetAllAsync();
+            var blogs = await _unitOfWork.Repository<Blog>().GetAllAsync();  
             var dtos = blogs.Where(b => b.IsPublished).Select(b => new BlogDto { 
                 Id = b.Id, Title = b.Title, Slug = b.Slug, Content = b.Content, AuthorId = b.AuthorId, IsPublished = b.IsPublished, CreatedAt = b.CreatedAt 
             });
