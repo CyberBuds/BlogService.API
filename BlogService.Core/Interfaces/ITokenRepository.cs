@@ -8,7 +8,8 @@ namespace BlogService.Core.Interfaces
 {
     public interface ITokenRepository
     {
-        public  Task<string> Login(string username, string password);
+        public Task<string> Login(string Email, string password);
        
+
     }
 }

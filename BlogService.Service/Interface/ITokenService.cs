@@ -8,6 +8,7 @@ namespace BlogService.Service.Interface
 {
     public interface ITokenService
     {
-        public Task<string> Login(string username, string password);
+        public Task<string> Login(string Email, string password);
+      
     }
 }
