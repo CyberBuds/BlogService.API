@@ -10,19 +10,20 @@ using System.Threading.Tasks;
 
 namespace BlogService.Service
 {
-    public class TokenService : ITokenService
+    public class TokenService : ITokenService  
     {
         private readonly ITokenRepository _tokenRepository;
 
-        public TokenService(ITokenRepository tokenRepository)
+        public TokenService(ITokenRepository tokenRepository) 
         {
             _tokenRepository = tokenRepository;
         }
-        public async Task<string> Login(string username, string password)
+        public async Task<string> Login(string Email, string password)
         {
    
-          var res = await _tokenRepository.Login(username, password);
+          var res = await _tokenRepository.Login(Email, password);
           return res;
         }
+
     }
 }

@@ -18,10 +18,10 @@ namespace BlogService.API.Controllers.Auth
 
         // 1. POST /api/v1/auth/login
         [HttpPost("login")]
-        public async Task<IActionResult> Login(string username, string password)
+        public async Task<IActionResult> Login(string Email, string password)
         {
 
-            var res = await _tokenService.Login(username, password);
+            var res = await _tokenService.Login(Email, password);
             return Ok(res);
             
            

@@ -18,7 +18,8 @@ namespace BlogService.Data
         }
 
         public DbSet<Tenant> Tenants { get; set; }
-        public DbSet<User> Users { get; set; } 
+        public DbSet<User> Users { get; set; }
+        public DbSet<ApiKey> ApiKeys { get; set; }
         public DbSet<Blog> Blogs { get; set; }
         public DbSet<Category> Categories { get; set; }
         public DbSet<Tag> Tags { get; set; }
@@ -26,6 +27,7 @@ namespace BlogService.Data
         public DbSet<Media> Media { get; set; }
         public DbSet<PageView> PageViews { get; set; }
         public DbSet<Like> Likes { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

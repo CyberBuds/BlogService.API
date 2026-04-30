@@ -6,7 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Text; 
+using System.Text;
 
 namespace BlogService.Repository.Auth
 {
@@ -14,32 +14,30 @@ namespace BlogService.Repository.Auth
     {
         private readonly BlogDbContext _context;
         private readonly IConfiguration _configuration;
-        public AuthRepository(BlogDbContext context, IConfiguration configuration) 
+        public AuthRepository(BlogDbContext context, IConfiguration configuration)
         {
             _context = context;
             _configuration = configuration;
         }
-        public async Task<string> Login(string username, string password)
+        public async Task<string> Login(string Email, string password)
         {
             var query = _context.Users
-             
-                .FirstOrDefault(u => u.Username == username);
 
-            
+                .FirstOrDefault(u => u.Email == Email);
+
+
 
             if (!BCrypt.Net.BCrypt.Verify(password, query.PasswordHash))
                 return null;
 
-            return GenerateJwtToken(query.Username);
+            return GenerateJwtToken(query.Email);
         }
 
-
-
-        public string GenerateJwtToken(string username)
+        public string GenerateJwtToken(string email) 
         {
             var claims = new[]
             {
-                    new Claim(ClaimTypes.Name, username)
+                    new Claim(ClaimTypes.Name, email)
                 };
 
             var key = new SymmetricSecurityKey(
@@ -58,7 +56,7 @@ namespace BlogService.Repository.Auth
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
-      
+
 
     }
 }
