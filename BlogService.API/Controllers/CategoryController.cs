@@ -40,7 +40,7 @@ namespace BlogService.API.Controllers
 
     [ApiController]
     [Route("api/v1/admin/categories")]
-    [Authorize(Roles = "Admin,Editor")]
+    [Authorize(Roles = "Admin,Editor,SuperAdmin")] 
     public class AdminCategoriesController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;

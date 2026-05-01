@@ -38,7 +38,7 @@ namespace BlogService.Data
             // Global Query Filters for Multi-Tenancy
             // This ensures we never accidentally bleed data across tenants.
             // The tenantId is dynamically evaluated when queries are executed.
-            modelBuilder.Entity<Blog>().HasQueryFilter(e => EF.Property<string>(e, "TenantId") == _tenantService.GetTenantId());
+            modelBuilder.Entity<Blog>().HasQueryFilter(e => string.IsNullOrEmpty(_tenantService.GetTenantId()) || EF.Property<string>(e, "TenantId") == _tenantService.GetTenantId());
             modelBuilder.Entity<Category>().HasQueryFilter(e => EF.Property<string>(e, "TenantId") == _tenantService.GetTenantId());
             modelBuilder.Entity<Tag>().HasQueryFilter(e => EF.Property<string>(e, "TenantId") == _tenantService.GetTenantId());
             modelBuilder.Entity<Comment>().HasQueryFilter(e => EF.Property<string>(e, "TenantId") == _tenantService.GetTenantId());

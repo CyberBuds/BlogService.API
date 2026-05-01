@@ -30,14 +30,15 @@ namespace BlogService.Repository.Auth
             if (!BCrypt.Net.BCrypt.Verify(password, query.PasswordHash))
                 return null;
 
-            return GenerateJwtToken(query.Email);
+            return GenerateJwtToken(query.Email, query.Role);
         }
 
-        public string GenerateJwtToken(string email) 
+        public string GenerateJwtToken(string email, string role) 
         {
             var claims = new[]
             {
-                    new Claim(ClaimTypes.Name, email)
+                    new Claim(ClaimTypes.Name, email),
+                    new Claim(ClaimTypes.Role, role)
                 };
 
             var key = new SymmetricSecurityKey(
