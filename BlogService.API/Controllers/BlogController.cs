@@ -84,7 +84,7 @@ namespace BlogService.API.Controllers
 
     [ApiController]
     [Route("api/v1/admin/blogs")]
-    [Authorize(Roles = "Admin,Editor")]
+    [Authorize(Roles = "Admin,Editor,SuperAdmin")]
     public class AdminBlogsController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -94,6 +94,45 @@ namespace BlogService.API.Controllers
             _unitOfWork = unitOfWork;
         }
 
+        [AllowAnonymous]
+        [HttpGet]
+        public async Task<IActionResult> GetAll([FromQuery] BlogQueryDto query)
+        {
+            var blogs = await _unitOfWork.Repository<Blog>().GetAllAsync();
+
+            // Filtering
+            if (!string.IsNullOrWhiteSpace(query.Search))
+                blogs = blogs.Where(b => b.Title.Contains(query.Search, StringComparison.OrdinalIgnoreCase));
+
+            if (query.IsPublished.HasValue)
+                blogs = blogs.Where(b => b.IsPublished == query.IsPublished.Value);
+
+            // Pagination
+            var totalCount = blogs.Count();
+            var pagedBlogs = blogs
+                .Skip((query.Page - 1) * query.PageSize)
+                .Take(query.PageSize)
+                .Select(b => new BlogDto
+                {
+                    Id = b.Id,
+                    Title = b.Title,
+                    Slug = b.Slug,
+                    IsPublished = b.IsPublished,
+                    Content = b.Content
+                })
+                .ToList();
+
+            return Ok(new
+            {
+                totalCount,
+                page = query.Page,
+                pageSize = query.PageSize,
+                totalPages = (int)Math.Ceiling(totalCount / (double)query.PageSize),
+                data = pagedBlogs
+            });
+        }
+
+        [AllowAnonymous]
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateBlogDto dto)
         {

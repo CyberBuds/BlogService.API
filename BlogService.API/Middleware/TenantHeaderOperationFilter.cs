@@ -7,7 +7,12 @@ namespace BlogService.API.Middleware
     public class TenantHeaderOperationFilter : IOperationFilter
     {
         public void Apply(OpenApiOperation operation, OperationFilterContext context)
-        {
+       {
+            var route = context.ApiDescription.RelativePath;
+            var method = context.ApiDescription.HttpMethod;
+            if (route == "api/v1/admin/blogs" && method == "GET")
+                return;
+
             if (operation.Parameters == null)
                 operation.Parameters = new List<OpenApiParameter>();
 
