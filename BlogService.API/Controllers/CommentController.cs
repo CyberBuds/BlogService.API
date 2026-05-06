@@ -31,17 +31,26 @@ namespace BlogService.API.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateCommentDto dto)
         {
+            // ✅ Get TenantId from request header
+            var tenantId = Request.Headers["TenantId"].ToString().Trim();
+
+            if (string.IsNullOrEmpty(tenantId))
+                return BadRequest("TenantId header is required.");
+
             var comment = new Comment
             {
+                Id = Guid.NewGuid(),
                 BlogId = dto.BlogId,
                 AuthorName = dto.AuthorName,
                 AuthorEmail = dto.AuthorEmail,
                 Content = dto.Content,
-                IsApproved = false // Requires moderation
+                IsApproved = false, // Requires moderation
+                CreatedAt = DateTime.UtcNow,   // ✅ Add this
+                TenantId = tenantId            // ✅ Add this 
             };
             await _unitOfWork.Repository<Comment>().AddAsync(comment);
             await _unitOfWork.SaveChangesAsync();
-            return Ok("Comment submitted for moderation.");
+            return Ok("Comment submitted for moderation."); 
         }
 
         [HttpPut("{id}")]
