@@ -34,3 +34,4 @@ Thumbs.db
 # Frontend Projects
 admin-panel/
 blogops-platform/
+/BlogService.API/appsettings.json
