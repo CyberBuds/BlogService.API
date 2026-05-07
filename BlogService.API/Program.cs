@@ -33,7 +33,7 @@ builder.Services.AddControllers();
 
 // Database
 builder.Services.AddDbContext<BlogDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));  
 
 // Repositories and Services
 builder.Services.AddScoped<ITenantService, TenantService>();
