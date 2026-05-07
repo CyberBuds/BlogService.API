@@ -1,13 +1,13 @@
 using BlogService.Core.DTOs;
 using BlogService.Core.Entities;
-using BlogService.Core.Interfaces;
+using BlogService.Core.Interfaces;   // ← ICommentService lives here ✅
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace BlogService.API.Controllers
+namespace BlogService.API.Controllers 
 {
     [ApiController]
     [Route("api/v1/comments")]
@@ -50,7 +50,7 @@ namespace BlogService.API.Controllers
             };
             await _unitOfWork.Repository<Comment>().AddAsync(comment);
             await _unitOfWork.SaveChangesAsync();
-            return Ok("Comment submitted for moderation."); 
+            return Ok("Comment submitted for moderation.");
         }
 
         [HttpPut("{id}")]
@@ -70,14 +70,46 @@ namespace BlogService.API.Controllers
 
     [ApiController]
     [Route("api/v1/admin/comments")]
-    [Authorize(Roles = "Admin,Editor")]
+    [Authorize(Roles = "Admin,Editor,SuperAdmin")]
     public class AdminCommentController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ICommentService _commentService;          // 👈 ADD this line
 
-        public AdminCommentController(IUnitOfWork unitOfWork)
+
+        public AdminCommentController(IUnitOfWork unitOfWork, ICommentService commentService)
         {
             _unitOfWork = unitOfWork;
+            _commentService = commentService;
+        }
+
+        // 👈 ADD this entire GET method
+        [HttpGet]
+        public async Task<IActionResult> GetComments(
+            [FromQuery] Guid blogId,
+            [FromQuery] string tenantId,
+            [FromQuery] bool? isApproved = null,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 20,
+            CancellationToken cancellationToken = default)
+        {
+            if (blogId == Guid.Empty)
+                return BadRequest(new { message = "blogId is required." });
+
+            if (string.IsNullOrWhiteSpace(tenantId))
+                return BadRequest(new { message = "tenantId is required." });
+
+            var result = await _commentService.GetCommentsByBlogAsync(
+                new GetCommentsByBlogQueryDto
+                {
+                    BlogId = blogId,
+                    TenantId = tenantId,
+                    IsApproved = isApproved,
+                    Page = page,
+                    PageSize = pageSize
+                }, cancellationToken);
+
+            return Ok(result);
         }
 
         [HttpPatch("{id}/approve")]
@@ -85,7 +117,7 @@ namespace BlogService.API.Controllers
         {
             var comment = await _unitOfWork.Repository<Comment>().GetByIdAsync(id);
             if (comment == null) return NotFound();
-            
+
             comment.IsApproved = true;
             _unitOfWork.Repository<Comment>().Update(comment);
             await _unitOfWork.SaveChangesAsync();
@@ -97,7 +129,7 @@ namespace BlogService.API.Controllers
         {
             var comment = await _unitOfWork.Repository<Comment>().GetByIdAsync(id);
             if (comment == null) return NotFound();
-            
+
             comment.IsApproved = false;
             _unitOfWork.Repository<Comment>().Update(comment);
             await _unitOfWork.SaveChangesAsync();
