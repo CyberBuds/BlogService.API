@@ -39,7 +39,8 @@ namespace BlogService.Service
                 BlogId = c.BlogId,
                 AuthorName = c.AuthorName,
                 Content = c.Content,
-                IsApproved = c.IsApproved
+                IsApproved = c.IsApproved,
+                CreatedAt = c.CreatedAt
             });
 
             return new PagedResult<CommentDto>
