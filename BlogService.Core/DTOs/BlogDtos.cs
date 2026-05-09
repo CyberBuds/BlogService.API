@@ -9,6 +9,7 @@ namespace BlogService.Core.DTOs
         public string Title { get; set; } = string.Empty;
         public string Slug { get; set; } = string.Empty;
         public string Content { get; set; } = string.Empty;
+        //public string TenantId { get; set; } = string.Empty;
         public Guid AuthorId { get; set; }
         public bool IsPublished { get; set; }
         public DateTime CreatedAt { get; set; }

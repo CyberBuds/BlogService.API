@@ -118,7 +118,8 @@ namespace BlogService.API.Controllers
                     Title = b.Title,
                     Slug = b.Slug,
                     IsPublished = b.IsPublished,
-                    Content = b.Content
+                    Content = b.Content,
+                    //TenantId = b.TenantId  // ✅ ADD THIS ONE LINE
                 })
                 .ToList();
 
