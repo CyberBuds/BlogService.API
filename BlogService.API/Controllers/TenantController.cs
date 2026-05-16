@@ -9,7 +9,7 @@ namespace BlogService.API.Controllers
 {
     [ApiController]
     [Route("api/v1/admin/tenants")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,SuperAdmin")] // ✅ allow both Admin and SuperAdmin
     public class TenantController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -23,6 +23,15 @@ namespace BlogService.API.Controllers
         public async Task<IActionResult> GetAll()
         {
             var repo = _unitOfWork.Repository<Tenant>();
+
+            // ✅ SuperAdmin can fetch all tenants without TenantId
+            if (User.IsInRole("SuperAdmin"))
+            {
+                var allTenants = await repo.GetAllAsync();
+                return Ok(allTenants);
+            }
+
+            // 🔒 Tenant Admins → existing tenant-based flow
             var tenants = await repo.GetAllAsync();
             return Ok(tenants);
         }

@@ -13,7 +13,7 @@ namespace BlogService.API.Middleware
         public TenantMiddleware(RequestDelegate next, ILogger<TenantMiddleware> logger)
         {
             _next = next;
-            _logger = logger;
+            _logger = logger; 
         }
 
         public async Task InvokeAsync(HttpContext context, ITenantService tenantService)

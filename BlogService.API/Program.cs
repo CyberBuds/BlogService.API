@@ -15,7 +15,9 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
 using System.Collections.Generic;
+using System.Security.Claims;
 using System.Text;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -70,7 +72,9 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = jwtSettings["Issuer"],
         ValidAudience = jwtSettings["Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(key)
+        IssuerSigningKey = new SymmetricSecurityKey(key),
+
+        RoleClaimType = ClaimTypes.Role  // ✅ Maps to the full schema URI in your token
     };
 });
 builder.Services.AddAuthorization();
