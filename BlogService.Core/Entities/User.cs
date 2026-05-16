@@ -11,6 +11,6 @@ namespace BlogService.Core.Entities
         public string? Role { get; set; } = "Viewer";
 
 
-        public string? TenantId { get; set; }
+        public Guid? TenantId { get; set; }
     }
 }
