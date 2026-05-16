@@ -9,7 +9,7 @@ namespace BlogService.API.Controllers
 {
     [ApiController]
     [Route("api/v1/admin/users")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,SuperAdmin")]  // ✅ Fixed — SuperAdmin added
     public class UserController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
