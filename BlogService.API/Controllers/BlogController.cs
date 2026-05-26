@@ -119,7 +119,7 @@ namespace BlogService.API.Controllers
                     Slug = b.Slug,
                     IsPublished = b.IsPublished,
                     Content = b.Content,
-                    //TenantId = b.TenantId  // ✅ ADD THIS ONE LINE
+                   
                 })
                 .ToList();
 
@@ -134,23 +134,84 @@ namespace BlogService.API.Controllers
         }
 
 
-        [AllowAnonymous]
+
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateBlogDto dto)
         {
+            // Fix 1: Trim TenantId to strip accidental whitespace from header
+            var tenantId = Request.Headers["TenantId"].FirstOrDefault()?.Trim() ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(tenantId))
+                return BadRequest(new { message = "TenantId header is required." });
+
+            // ✅ THIS GUARD — prevents the FK 500 with a readable 400 message
+            var author = await _unitOfWork.Repository<User>().GetByIdAsync(dto.AuthorId);
+            if (author == null)
+                return BadRequest(new
+                {
+                    message = $"AuthorId '{dto.AuthorId}' does not exist in Users table.",
+                    hint = "Use a real User Id. Valid Ids: dbb9fc0b-... or fbb3ae66-..."
+                });
+
+            // Fix 3: Prevent duplicate slug constraint violation
+            var slug = dto.Title.ToLower().Replace(" ", "-").Replace(".", "");
+            var existingBlogs = await _unitOfWork.Repository<Blog>().GetAllAsync();
+            if (existingBlogs.Any(b => b.Slug == slug && b.TenantId == tenantId))
+                slug = $"{slug}-{DateTime.UtcNow.Ticks}"; // make it unique
+
             var blog = new Blog
             {
                 Title = dto.Title,
-                Slug = dto.Title.ToLower().Replace(" ", "-").Replace(".", ""),
+                Slug = slug,
                 Content = dto.Content,
                 AuthorId = dto.AuthorId,
+                TenantId = tenantId,
                 IsPublished = false
             };
 
-            await _unitOfWork.Repository<Blog>().AddAsync(blog);
-            await _unitOfWork.SaveChangesAsync();
+            if (dto.CategoryIds?.Any() == true)
+            {
+                var allCategories = await _unitOfWork.Repository<Category>().GetAllAsync();
+                foreach (var categoryId in dto.CategoryIds)
+                {
+                    var category = allCategories.FirstOrDefault(c => c.Id == categoryId);
+                    if (category != null)
+                        blog.Categories.Add(category);
+                }
+            }
 
-            return Ok(new BlogDto { Id = blog.Id, Title = blog.Title, Slug = blog.Slug, IsPublished = false });
+            if (dto.TagIds?.Any() == true)
+            {
+                var allTags = await _unitOfWork.Repository<Tag>().GetAllAsync();
+                foreach (var tagId in dto.TagIds)
+                {
+                    var tag = allTags.FirstOrDefault(t => t.Id == tagId);
+                    if (tag != null)
+                        blog.Tags.Add(tag);
+                }
+            }
+            try
+            {
+                await _unitOfWork.Repository<Blog>().AddAsync(blog);
+                await _unitOfWork.SaveChangesAsync();
+            }
+            catch (Microsoft.EntityFrameworkCore.DbUpdateException ex)
+            {
+                return StatusCode(500, new
+                {
+                    error = "Database save failed",
+                    detail = ex.InnerException?.Message ?? ex.Message
+                });
+            }
+
+            return Ok(new BlogDto
+            {
+                Id = blog.Id,
+                Title = blog.Title,
+                Slug = blog.Slug,
+                AuthorId = blog.AuthorId,
+                IsPublished = false,
+                CreatedAt = blog.CreatedAt
+            });
         }
 
         [HttpPut("{id}")]
