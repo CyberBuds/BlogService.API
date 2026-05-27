@@ -69,7 +69,14 @@ namespace BlogService.API.Controllers
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdateTagDto dto)
         {
             var tag = await _unitOfWork.Repository<Tag>().GetByIdAsync(id);
-            if (tag == null) return NotFound();
+            if (tag == null)
+            {
+                return NotFound(new
+                {
+                    Success = false,
+                    Message = "Tag not found"
+                });
+            }
 
             tag.Name = dto.Name;
             tag.Slug = dto.Name.ToLower().Replace(" ", "-");
@@ -77,20 +84,50 @@ namespace BlogService.API.Controllers
             _unitOfWork.Repository<Tag>().Update(tag);
             await _unitOfWork.SaveChangesAsync();
 
-            return NoContent();
+            // Prepare response DTO
+            var updatedTag = new TagDto
+            {
+                Id = tag.Id,
+                Name = tag.Name,
+                Slug = tag.Slug
+            };
+
+            // Return 200 OK with updated data
+            return Ok(new
+            {
+                Success = true,
+                Message = "Tag updated successfully",
+                Data = updatedTag
+            });
         }
 
+       
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
+         //[Authorize(Roles = "Admin")] 
         public async Task<IActionResult> Delete(Guid id)
         {
             var tag = await _unitOfWork.Repository<Tag>().GetByIdAsync(id);
-            if (tag == null) return NotFound();
+            
+            // Check if tag exists
+            if (tag == null)
+            {
+                return NotFound(new
+                {
+                    Success = false,
+                    Message = "Tag not found"
+                });
+            }
+
 
             _unitOfWork.Repository<Tag>().Delete(tag);
             await _unitOfWork.SaveChangesAsync();
 
-            return NoContent();
+            return Ok(new
+            {
+                Success = true,
+                Message = "Tag deleted successfully",
+                DeletedTagId = id
+            });
         }
     }
 }

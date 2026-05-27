@@ -56,7 +56,7 @@ namespace BlogService.API.Controllers
         public async Task<IActionResult> Update(Guid id, [FromBody] Tenant updateDto)
         {
             var tenant = await _unitOfWork.Repository<Tenant>().GetByIdAsync(id);
-            if (tenant == null) return NotFound();
+            if (tenant == null) return NotFound(new { message = "Tenant not found." });
 
             tenant.Name = updateDto.Name;
             tenant.Identifier = updateDto.Identifier;
@@ -65,19 +65,21 @@ namespace BlogService.API.Controllers
             _unitOfWork.Repository<Tenant>().Update(tenant);
             await _unitOfWork.SaveChangesAsync();
 
-            return NoContent();
+            // ✅ 200 OK instead of 204
+            return Ok(tenant);
         }
-
+      
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
             var tenant = await _unitOfWork.Repository<Tenant>().GetByIdAsync(id);
-            if (tenant == null) return NotFound();
+            if (tenant == null) return NotFound(new { message = "Tenant not found." });
 
             _unitOfWork.Repository<Tenant>().Delete(tenant);
             await _unitOfWork.SaveChangesAsync();
 
-            return NoContent();
+            // ✅ 200 OK instead of 204
+            return Ok(new { message = "Tenant deleted successfully.", deletedId = id });
         }
     }
 }
