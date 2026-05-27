@@ -217,8 +217,18 @@ namespace BlogService.API.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdateBlogDto dto)
         {
-            var blog = await _unitOfWork.Repository<Blog>().GetByIdAsync(id);
-            if (blog == null) return NotFound();
+
+            // ✅ Read and validate TenantId header (same pattern as Create)
+            var tenantId = Request.Headers["TenantId"].FirstOrDefault()?.Trim() ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(tenantId))
+                return BadRequest(new { message = "TenantId header is required." });
+         
+            // ✅ Query by BOTH id AND tenantId — fixes the 404
+            var blogs = await _unitOfWork.Repository<Blog>().GetAllAsync();
+            var blog = blogs.FirstOrDefault(b => b.Id == id && b.TenantId == tenantId);
+
+            if (blog == null) 
+            return NotFound(new { message = $"Blog '{id}' not found for tenant '{tenantId}'." });
 
             blog.Title = dto.Title;
             blog.Content = dto.Content;
@@ -227,45 +237,89 @@ namespace BlogService.API.Controllers
             _unitOfWork.Repository<Blog>().Update(blog);
             await _unitOfWork.SaveChangesAsync();
 
-            return NoContent();
+            // ✅ Return 200 OK with updated blog data instead of 204 No Content
+            return Ok(new BlogDto
+            {
+                Id = blog.Id,
+                Title = blog.Title,
+                Slug = blog.Slug,
+                Content = blog.Content,
+                AuthorId = blog.AuthorId,
+                IsPublished = blog.IsPublished,
+                CreatedAt = blog.CreatedAt
+            });
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
-            var blog = await _unitOfWork.Repository<Blog>().GetByIdAsync(id);
-            if (blog == null) return NotFound();
+            var tenantId = Request.Headers["TenantId"].FirstOrDefault()?.Trim() ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(tenantId))
+                return BadRequest(new { message = "TenantId header is required." });
+
+            var blogs = await _unitOfWork.Repository<Blog>().GetAllAsync();
+            var blog = blogs.FirstOrDefault(b => b.Id == id && b.TenantId == tenantId);
+            if (blog == null)
+                return NotFound(new { message = $"Blog '{id}' not found for tenant '{tenantId}'." });
 
             _unitOfWork.Repository<Blog>().Delete(blog);
             await _unitOfWork.SaveChangesAsync();
 
-            return NoContent();
+            // ✅ 200 OK with deleted blog info
+            return Ok(new
+            {
+                message = "Blog deleted successfully.",
+                deletedBlogId = blog.Id,
+                title = blog.Title
+            });
         }
 
         [HttpPatch("{id}/publish")]
         public async Task<IActionResult> Publish(Guid id)
         {
-            var blog = await _unitOfWork.Repository<Blog>().GetByIdAsync(id);
-            if (blog == null) return NotFound();
+            var blogs = await _unitOfWork.Repository<Blog>().GetAllAsync();
+            var blog = blogs.FirstOrDefault(b => b.Id == id);
+            if (blog == null) return NotFound(new { message = $"Blog '{id}' not found." });
 
             blog.IsPublished = true;
             _unitOfWork.Repository<Blog>().Update(blog);
             await _unitOfWork.SaveChangesAsync();
 
-            return NoContent();
+            // ✅ 200 OK with updated blog data
+            return Ok(new BlogDto
+            {
+                Id = blog.Id,
+                Title = blog.Title,
+                Slug = blog.Slug,
+                Content = blog.Content,
+                AuthorId = blog.AuthorId,
+                IsPublished = blog.IsPublished,
+                CreatedAt = blog.CreatedAt
+            });
         }
 
         [HttpPatch("{id}/unpublish")]
         public async Task<IActionResult> Unpublish(Guid id)
         {
-            var blog = await _unitOfWork.Repository<Blog>().GetByIdAsync(id);
-            if (blog == null) return NotFound();
+            var blogs = await _unitOfWork.Repository<Blog>().GetAllAsync();
+            var blog = blogs.FirstOrDefault(b => b.Id == id);
+            if (blog == null) return NotFound(new { message = $"Blog '{id}' not found." });
 
             blog.IsPublished = false;
             _unitOfWork.Repository<Blog>().Update(blog);
             await _unitOfWork.SaveChangesAsync();
 
-            return NoContent();
+            // ✅ 200 OK with updated blog data (was NoContent)
+            return Ok(new BlogDto
+            {
+                Id = blog.Id,
+                Title = blog.Title,
+                Slug = blog.Slug,
+                Content = blog.Content,
+                AuthorId = blog.AuthorId,
+                IsPublished = blog.IsPublished,
+                CreatedAt = blog.CreatedAt
+            });
         }
     }
 }

@@ -7,7 +7,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace BlogService.API.Controllers 
+namespace BlogService.API.Controllers
 {
     [ApiController]
     [Route("api/v1/comments")]
@@ -56,15 +56,38 @@ namespace BlogService.API.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] CreateCommentDto dto)
         {
-            await Task.Delay(10);
-            return NoContent();
+            var comment = await _unitOfWork.Repository<Comment>().GetByIdAsync(id);
+            if (comment == null) return NotFound(new { message = "Comment not found." });
+
+            comment.AuthorName = dto.AuthorName;
+            comment.AuthorEmail = dto.AuthorEmail;
+            comment.Content = dto.Content;
+
+            _unitOfWork.Repository<Comment>().Update(comment);
+            await _unitOfWork.SaveChangesAsync();
+
+            // ✅ 200 OK with updated data instead of 204
+            return Ok(new CommentDto
+            {
+                Id = comment.Id,
+                BlogId = comment.BlogId,
+                AuthorName = comment.AuthorName,
+                Content = comment.Content,
+                IsApproved = comment.IsApproved
+            });
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
-            await Task.Delay(10);
-            return NoContent();
+            var comment = await _unitOfWork.Repository<Comment>().GetByIdAsync(id);
+            if (comment == null) return NotFound(new { message = "Comment not found." });
+
+            _unitOfWork.Repository<Comment>().Delete(comment);
+            await _unitOfWork.SaveChangesAsync();
+
+            // ✅ 200 OK instead of 204
+            return Ok(new { message = "Comment deleted successfully.", deletedId = id });
         }
     }
 
@@ -116,24 +139,29 @@ namespace BlogService.API.Controllers
         public async Task<IActionResult> Approve(Guid id)
         {
             var comment = await _unitOfWork.Repository<Comment>().GetByIdAsync(id);
-            if (comment == null) return NotFound();
+            if (comment == null) return NotFound(new { message = "Comment not found." });
 
             comment.IsApproved = true;
             _unitOfWork.Repository<Comment>().Update(comment);
             await _unitOfWork.SaveChangesAsync();
-            return NoContent();
+
+            // ✅ 200 OK instead of 204
+            return Ok(new { message = "Comment approved.", commentId = id, isApproved = true });
         }
+
 
         [HttpPatch("{id}/reject")]
         public async Task<IActionResult> Reject(Guid id)
         {
             var comment = await _unitOfWork.Repository<Comment>().GetByIdAsync(id);
-            if (comment == null) return NotFound();
+            if (comment == null) return NotFound(new { message = "Comment not found." });
 
             comment.IsApproved = false;
             _unitOfWork.Repository<Comment>().Update(comment);
             await _unitOfWork.SaveChangesAsync();
-            return NoContent();
+
+            // ✅ 200 OK instead of 204
+            return Ok(new { message = "Comment rejected.", commentId = id, isApproved = false });
         }
     }
 }

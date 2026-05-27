@@ -69,7 +69,7 @@ namespace BlogService.API.Controllers
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdateCategoryDto dto)
         {
             var category = await _unitOfWork.Repository<Category>().GetByIdAsync(id);
-            if (category == null) return NotFound();
+            if (category == null) return NotFound(new { message = "Category not found." });
 
             category.Name = dto.Name;
             category.Slug = dto.Name.ToLower().Replace(" ", "-");
@@ -77,11 +77,12 @@ namespace BlogService.API.Controllers
             _unitOfWork.Repository<Category>().Update(category);
             await _unitOfWork.SaveChangesAsync();
 
-            return NoContent();
+            // ✅ 200 OK instead of 204
+            return Ok(new CategoryDto { Id = category.Id, Name = category.Name, Slug = category.Slug });
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
+      
         public async Task<IActionResult> Delete(Guid id)
         {
             var category = await _unitOfWork.Repository<Category>().GetByIdAsync(id);
@@ -90,7 +91,8 @@ namespace BlogService.API.Controllers
             _unitOfWork.Repository<Category>().Delete(category);
             await _unitOfWork.SaveChangesAsync();
 
-            return NoContent();
+            // ✅ 200 OK instead of 204
+            return Ok(new { message = "Category deleted successfully.", deletedId = id });
         }
     }
 }
