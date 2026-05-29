@@ -45,8 +45,12 @@ namespace BlogService.Data
             modelBuilder.Entity<Media>().HasQueryFilter(e => EF.Property<string>(e, "TenantId") == _tenantService.GetTenantId());
             modelBuilder.Entity<PageView>().HasQueryFilter(e => EF.Property<string>(e, "TenantId") == _tenantService.GetTenantId());
             modelBuilder.Entity<Like>().HasQueryFilter(e => EF.Property<string>(e, "TenantId") == _tenantService.GetTenantId());
+
+            // ✅ ADD THIS — hides soft-deleted records from ALL queries automatically
+            modelBuilder.Entity<User>().HasQueryFilter(e => !e.IsDeleted);
+
             // User entity isolation strategy (some systems share users, some don't. We'll isolate).
-           // Many-to-Many Relationships
+            // Many-to-Many Relationships
             modelBuilder.Entity<Blog>()
                 .HasMany(b => b.Categories)
                 .WithMany(c => c.Blogs)
@@ -97,6 +101,7 @@ namespace BlogService.Data
                 if (entry.State == EntityState.Added)
                 {
                     entry.Entity.CreatedAt = DateTime.UtcNow;
+                    entry.Entity.UpdatedAt = DateTime.UtcNow; // ✅ ADD THIS LINE
 
                     // Automatically attach TenantId to entities that belong to a tenant
                     var tenantProperty = entry.Entity.GetType().GetProperty("TenantId");
