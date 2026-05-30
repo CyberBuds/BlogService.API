@@ -88,6 +88,8 @@ namespace BlogService.API.Controllers
             var category = await _unitOfWork.Repository<Category>().GetByIdAsync(id);
             if (category == null) return NotFound();
 
+            // ✅ Soft delete — same as User
+            category.IsDeleted = true;
             _unitOfWork.Repository<Category>().Delete(category);
             await _unitOfWork.SaveChangesAsync();
 

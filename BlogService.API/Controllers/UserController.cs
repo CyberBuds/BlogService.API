@@ -35,7 +35,6 @@ namespace BlogService.API.Controllers
             if (user == null) return NotFound();
             return Ok(user);
         }
-
         
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateUserDto dto)  // ✅ dto parameter
@@ -90,7 +89,6 @@ namespace BlogService.API.Controllers
 
 
             user.IsDeleted = true; // ✅ Soft delete flag
-
             _unitOfWork.Repository<User>().Update(user); // ✅ Update NOT Delete
             await _unitOfWork.SaveChangesAsync();
 

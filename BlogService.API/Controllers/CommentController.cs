@@ -83,6 +83,8 @@ namespace BlogService.API.Controllers
             var comment = await _unitOfWork.Repository<Comment>().GetByIdAsync(id);
             if (comment == null) return NotFound(new { message = "Comment not found." });
 
+            // ✅ Soft delete — same as User
+            comment.IsDeleted = true;
             _unitOfWork.Repository<Comment>().Delete(comment);
             await _unitOfWork.SaveChangesAsync();
 

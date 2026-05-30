@@ -1,3 +1,4 @@
+using BlogService.Core.Entities;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Threading.Tasks;
@@ -25,6 +26,7 @@ namespace BlogService.API.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
+           
             await Task.Delay(10);
             return NoContent();
         }

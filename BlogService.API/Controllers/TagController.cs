@@ -118,7 +118,8 @@ namespace BlogService.API.Controllers
                 });
             }
 
-
+            // ✅ Soft delete — same as User
+            tag.IsDeleted = true;
             _unitOfWork.Repository<Tag>().Delete(tag);
             await _unitOfWork.SaveChangesAsync();
 

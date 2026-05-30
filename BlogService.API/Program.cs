@@ -140,7 +140,7 @@ app.UseCors("AllowPortal");
 app.UseHttpsRedirection();
 
 // Enable CORS explicitly
-
+            
 
 // Use Tenant Middleware
 app.UseMiddleware<TenantMiddleware>();
