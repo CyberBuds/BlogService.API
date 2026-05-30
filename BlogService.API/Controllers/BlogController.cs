@@ -262,6 +262,8 @@ namespace BlogService.API.Controllers
             if (blog == null)
                 return NotFound(new { message = $"Blog '{id}' not found for tenant '{tenantId}'." });
 
+            // ✅ Soft delete — same as User
+            blog.IsDeleted = true;
             _unitOfWork.Repository<Blog>().Delete(blog);
             await _unitOfWork.SaveChangesAsync();
 

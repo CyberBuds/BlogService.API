@@ -75,6 +75,8 @@ namespace BlogService.API.Controllers
             var tenant = await _unitOfWork.Repository<Tenant>().GetByIdAsync(id);
             if (tenant == null) return NotFound(new { message = "Tenant not found." });
 
+            // ✅ Soft delete — same as User
+            tenant.IsDeleted = true;
             _unitOfWork.Repository<Tenant>().Delete(tenant);
             await _unitOfWork.SaveChangesAsync();
 
