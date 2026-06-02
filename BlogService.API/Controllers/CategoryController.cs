@@ -33,14 +33,14 @@ namespace BlogService.API.Controllers
         {
             var category = await _unitOfWork.Repository<Category>().GetByIdAsync(id);
             if (category == null) return NotFound();
-            
+
             return Ok(new CategoryDto { Id = category.Id, Name = category.Name, Slug = category.Slug });
         }
     }
 
     [ApiController]
     [Route("api/v1/admin/categories")]
-    [Authorize(Roles = "Admin,Editor,SuperAdmin")] 
+    [Authorize(Roles = "Admin,Editor,SuperAdmin,admin,superadmin,editor")]
     public class AdminCategoriesController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -82,7 +82,7 @@ namespace BlogService.API.Controllers
         }
 
         [HttpDelete("{id}")]
-      
+
         public async Task<IActionResult> Delete(Guid id)
         {
             var category = await _unitOfWork.Repository<Category>().GetByIdAsync(id);
