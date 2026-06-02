@@ -95,7 +95,7 @@ namespace BlogService.API.Controllers
 
     [ApiController]
     [Route("api/v1/admin/comments")]
-    [Authorize(Roles = "Admin,Editor,SuperAdmin")]
+    [Authorize(Roles = "Admin,Editor,SuperAdmin,admin,superadmin,editor")]
     public class AdminCommentController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;

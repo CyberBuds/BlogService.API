@@ -84,7 +84,7 @@ namespace BlogService.API.Controllers
 
     [ApiController]
     [Route("api/v1/admin/blogs")]
-    [Authorize(Roles = "Admin,Editor,SuperAdmin")]
+    [Authorize(Roles = "Admin,SuperAdmin,admin,superadmin")]
     public class AdminBlogsController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
