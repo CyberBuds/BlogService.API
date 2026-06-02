@@ -1,9 +1,10 @@
+using BlogService.Core.DTOs;
+using BlogService.Core.Entities;
+using BlogService.Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Threading.Tasks;
-using BlogService.Core.Entities;
-using BlogService.Core.Interfaces;
 
 namespace BlogService.API.Controllers
 {
@@ -45,10 +46,20 @@ namespace BlogService.API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] Tenant tenant)
+        public async Task<IActionResult> Create([FromBody] CreateTenantDto tenantDto) // 👈 Changed from Tenant to CreateTenantDto
         {
+            // Map DTO fields to the Tenant domain entity
+            var tenant = new Tenant
+            {
+                Name = tenantDto.Name,
+                Identifier = tenantDto.Identifier,
+                IsActive = tenantDto.IsActive
+                // Id, CreatedAt, UpdatedAt, and IsDeleted are managed automatically by BaseEntity/Database
+            };
+
             await _unitOfWork.Repository<Tenant>().AddAsync(tenant);
             await _unitOfWork.SaveChangesAsync();
+
             return CreatedAtAction(nameof(GetById), new { id = tenant.Id }, tenant);
         }
 
