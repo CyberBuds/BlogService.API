@@ -66,19 +66,35 @@ namespace BlogService.API.Controllers
 
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(Guid id, [FromBody] User updateDto)
+        public async Task<IActionResult> Update(Guid id, [FromBody] UpdateUserDto dto)
         {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
             var user = await _unitOfWork.Repository<User>().GetByIdAsync(id);
             if (user == null) return NotFound(new { message = "User not found." });
 
-            user.Username = updateDto.Username;
-            user.Email = updateDto.Email;
+            user.Username = dto.Username.Trim();
+            user.Email = dto.Email.Trim().ToLower();
+
+            // Only update password if a new one is provided
+            if (!string.IsNullOrWhiteSpace(dto.Password))
+                user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+
+            // Only update role if provided, otherwise keep existing
+            if (!string.IsNullOrWhiteSpace(dto.Role))
+                user.Role = dto.Role;
 
             _unitOfWork.Repository<User>().Update(user);
             await _unitOfWork.SaveChangesAsync();
 
-            // ✅ 200 OK instead of 204
-            return Ok(user);
+            return Ok(new
+            {
+                userId = user.Id,
+                username = user.Username,
+                email = user.Email,
+                role = user.Role
+            });
         }
 
         [HttpDelete("{id}")]
