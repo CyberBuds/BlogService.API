@@ -19,6 +19,7 @@ using System.Security.Claims;
 using System.Text;
 
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Configure Serilog
@@ -47,6 +48,8 @@ builder.Services.AddScoped<IApiKeyRepository, ApiKeyRepository>();
 builder.Services.AddScoped<IApiKeyService, ApiKeyService>();
 builder.Services.AddScoped<ICommentRepository, CommentRepository>();
 builder.Services.AddScoped<ICommentService, CommentService>();
+// ✅ ADD THIS LINE — was missing
+builder.Services.AddScoped<IMediaService, MediaService>();
 // Exception Handler
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();

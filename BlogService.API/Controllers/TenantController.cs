@@ -63,22 +63,32 @@ namespace BlogService.API.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(Guid id, [FromBody] Tenant updateDto)
+        public async Task<IActionResult> Update(Guid id, [FromBody] UpdateTenantDto dto)
         {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
             var tenant = await _unitOfWork.Repository<Tenant>().GetByIdAsync(id);
             if (tenant == null) return NotFound(new { message = "Tenant not found." });
 
-            tenant.Name = updateDto.Name;
-            tenant.Identifier = updateDto.Identifier;
-            tenant.IsActive = updateDto.IsActive;
+            tenant.Name = dto.Name.Trim();
+            tenant.Identifier = dto.Identifier.Trim().ToLower();
+            tenant.IsActive = dto.IsActive;
+            tenant.UpdatedAt = DateTime.UtcNow;
 
             _unitOfWork.Repository<Tenant>().Update(tenant);
             await _unitOfWork.SaveChangesAsync();
 
-            // ✅ 200 OK instead of 204
-            return Ok(tenant);
+            return Ok(new
+            {
+                tenantId = tenant.Id,
+                name = tenant.Name,
+                identifier = tenant.Identifier,
+                isActive = tenant.IsActive,
+                updatedAt = tenant.UpdatedAt
+            });
         }
-      
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
