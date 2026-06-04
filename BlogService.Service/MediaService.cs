@@ -3,7 +3,7 @@ using BlogService.Core.Interfaces;
 using BlogService.Service.Interface;
 using System;
 using System.Threading.Tasks;
-
+using System.Linq;
 namespace BlogService.Service
 {
     public class MediaService : IMediaService
@@ -54,6 +54,20 @@ namespace BlogService.Service
             // DbContext query filter on Media automatically scopes results to the tenant.
             var allMedia = await _unitOfWork.Repository<Media>().GetAllAsync();
             return allMedia.Where(m => m.BlogId == blogId);
+        }
+        public async Task<bool> DeleteAsync(Guid mediaId)
+        {
+
+            // Use GetAllAsync so the Media query filter (IsNullOrEmpty guard) applies,
+            // then match by Id — no TenantId header needed
+            var allMedia = await _unitOfWork.Repository<Media>().GetAllAsync();
+            var media = allMedia.FirstOrDefault(m => m.Id == mediaId);
+            if (media == null) return false;
+
+            _unitOfWork.Repository<Media>().Delete(media);
+            await _unitOfWork.SaveChangesAsync();
+
+            return true;
         }
     }
 }
