@@ -48,5 +48,12 @@ namespace BlogService.Service
 
             return media;
         }
+        public async Task<IEnumerable<Media>> GetMediaByBlogIdAsync(Guid blogId)
+        {
+            // TenantId is already set by TenantMiddleware from the request header.
+            // DbContext query filter on Media automatically scopes results to the tenant.
+            var allMedia = await _unitOfWork.Repository<Media>().GetAllAsync();
+            return allMedia.Where(m => m.BlogId == blogId);
+        }
     }
 }

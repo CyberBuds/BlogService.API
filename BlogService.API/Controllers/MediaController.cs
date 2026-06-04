@@ -1,9 +1,10 @@
 using BlogService.Service.Interface;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
-namespace BlogService.API.Controllers
+namespace BlogService.API.Controllers 
 {
     public class UploadMediaRequest
     {
@@ -43,7 +44,13 @@ namespace BlogService.API.Controllers
             if (result == null)
                 return NotFound(new { error = $"Blog '{request.BlogId}' not found. TenantId could not be resolved." });
 
-            return Ok(new { url = result.PublicUrl });
+            return Ok(new
+            {
+                url = result.PublicUrl,
+                fileName = result.FileName,
+                contentType = result.ContentType,
+                createdAt = result.CreatedAt
+            });
         }
 
         [HttpGet("{id}")]
@@ -63,8 +70,16 @@ namespace BlogService.API.Controllers
         [HttpGet("blog/{blogId}")]
         public async Task<IActionResult> GetByBlog(Guid blogId)
         {
-            await Task.Delay(10);
-            return Ok(new[] { new { Id = Guid.NewGuid(), Url = "mock.jpg" } });
+            var mediaList = await _mediaService.GetMediaByBlogIdAsync(blogId);
+            var result = mediaList.Select(m => new
+            {
+                id = m.Id,
+                url = m.PublicUrl,
+                fileName = m.FileName,
+                contentType = m.ContentType,
+                createdAt = m.CreatedAt
+            });
+            return Ok(result);
         }
     }
 }
