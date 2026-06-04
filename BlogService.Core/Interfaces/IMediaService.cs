@@ -8,5 +8,6 @@ namespace BlogService.Service.Interface
     {
         Task<Media?> UploadAsync(Guid blogId, string fileName, string contentType);
         Task<IEnumerable<Media>> GetMediaByBlogIdAsync(Guid blogId); // ← add this
+        Task<bool> DeleteAsync(Guid mediaId); // ← add this
     }
 }

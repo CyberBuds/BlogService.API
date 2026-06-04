@@ -63,8 +63,11 @@ namespace BlogService.API.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
-            await Task.Delay(10);
-            return NoContent();
+            var deleted = await _mediaService.DeleteAsync(id);
+            if (!deleted)
+                return NotFound(new { error = $"Media '{id}' not found." });
+
+            return Ok(new { message = "Media deleted successfully." }); // ← changed from NoContent() to Ok()
         }
 
         [HttpGet("blog/{blogId}")]
