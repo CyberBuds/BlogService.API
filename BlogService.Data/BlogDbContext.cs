@@ -42,7 +42,8 @@ namespace BlogService.Data
             modelBuilder.Entity<Category>().HasQueryFilter(e => EF.Property<string>(e, "TenantId") == _tenantService.GetTenantId());
             modelBuilder.Entity<Tag>().HasQueryFilter(e => EF.Property<string>(e, "TenantId") == _tenantService.GetTenantId());
             modelBuilder.Entity<Comment>().HasQueryFilter(e => EF.Property<string>(e, "TenantId") == _tenantService.GetTenantId());
-            modelBuilder.Entity<Media>().HasQueryFilter(e => EF.Property<string>(e, "TenantId") == _tenantService.GetTenantId());
+            // AFTER
+            modelBuilder.Entity<Media>().HasQueryFilter(e => string.IsNullOrEmpty(_tenantService.GetTenantId()) || EF.Property<string>(e, "TenantId") == _tenantService.GetTenantId());
             modelBuilder.Entity<PageView>().HasQueryFilter(e => EF.Property<string>(e, "TenantId") == _tenantService.GetTenantId());
             modelBuilder.Entity<Like>().HasQueryFilter(e => EF.Property<string>(e, "TenantId") == _tenantService.GetTenantId());
 

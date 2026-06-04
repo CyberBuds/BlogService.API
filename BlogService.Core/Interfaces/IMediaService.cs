@@ -7,5 +7,6 @@ namespace BlogService.Service.Interface
     public interface IMediaService
     {
         Task<Media?> UploadAsync(Guid blogId, string fileName, string contentType);
+        Task<IEnumerable<Media>> GetMediaByBlogIdAsync(Guid blogId); // ← add this
     }
 }
