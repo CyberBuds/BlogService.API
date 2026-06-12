@@ -11,6 +11,8 @@ namespace BlogService.Core.Entities
         public string? Key { get; set; } 
         public string? Name { get; set; }
         public bool IsActive { get; set; } = true;
-        public DateTime? ExpiresAt { get; set; } 
+        public DateTime? ExpiresAt { get; set; }
+        public string? TenantId { get; set; } // ✅ ADD THIS
+        
     }
 }

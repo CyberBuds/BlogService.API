@@ -1,48 +1,82 @@
 ﻿using BlogService.Core.Entities;
 using BlogService.Core.Interfaces;
 using BlogService.Data;
+using Microsoft.EntityFrameworkCore;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Security.Cryptography;
-using System.Text;
 using System.Threading.Tasks;
 
-namespace BlogService.Repository 
+namespace BlogService.Repository
 {
-    public class ApiKeyRepository : IApiKeyRepository 
+    public class ApiKeyRepository : IApiKeyRepository
     {
         private readonly BlogDbContext _context;
+        private readonly ITenantService _tenantService;
 
-        public ApiKeyRepository(BlogDbContext context)
+        public ApiKeyRepository(BlogDbContext context, ITenantService tenantService)
         {
             _context = context;
+            _tenantService = tenantService;
+        }
+
+        // ✅ Keep only this:
+        public async Task<string?> UpdateApiKey(Guid id, string? name, bool isActive)
+        {
+            var key = await _context.ApiKeys.FirstOrDefaultAsync(k => k.Id == id);
+            if (key == null) return null;
+
+            if (!string.IsNullOrEmpty(name))
+                key.Name = name;
+
+            key.IsActive = isActive;
+            key.Key = GenerateRandomKey(); // ✅ Regenerate new key
+            key.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            return key.Key; // ✅ Return new key
         }
 
         public async Task<string> GenerateApiKey(string name)
         {
-            //Generate a random API key
             string apiKey = GenerateRandomKey();
+            var tenantId = _tenantService.GetTenantId();
 
-            var newapiKey = new ApiKey
+            var newApiKey = new ApiKey
             {
                 Id = Guid.NewGuid(),
                 Key = apiKey,
-                Name = name,
+                Name = name.Trim(),
                 IsActive = true,
-                CreatedAt = DateTime.Now,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
                 ExpiresAt = null,
+                TenantId = tenantId
             };
-            _context.ApiKeys.Add(newapiKey);
-            await _context.SaveChangesAsync();
 
-            return apiKey;
+            try
+            {
+                _context.ApiKeys.Add(newApiKey);
+                await _context.SaveChangesAsync();
+                return apiKey;
+            }
+            catch (Exception ex)
+            {
+                // ✅ Shows exact error in Visual Studio Output window
+                Console.WriteLine("=== REAL ERROR ===");
+                Console.WriteLine($"Message:           {ex.Message}");
+                Console.WriteLine($"Inner:             {ex.InnerException?.Message}");
+                Console.WriteLine($"Inner Inner:       {ex.InnerException?.InnerException?.Message}");
+                Console.WriteLine($"TenantId was:      {tenantId}");
+                Console.WriteLine($"ApiKey Name was:   {name}");
+                Console.WriteLine("==================");
+                throw;
+            }
         }
 
         public async Task<bool> ValidateApiKey(string apiKey)
         {
-            var key = _context.ApiKeys
-                .FirstOrDefault(k => k.Key == apiKey && k.IsActive);
+            var key = await _context.ApiKeys
+                .FirstOrDefaultAsync(k => k.Key == apiKey && k.IsActive);
 
             if (key == null)
                 return false;
@@ -56,7 +90,8 @@ namespace BlogService.Repository
 
         public async Task<bool> DeleteApiKey(string apiKey)
         {
-            var key = _context.ApiKeys.FirstOrDefault(k => k.Key == apiKey);
+            var key = await _context.ApiKeys
+                .FirstOrDefaultAsync(k => k.Key == apiKey);
 
             if (key == null)
                 return false;
@@ -67,9 +102,8 @@ namespace BlogService.Repository
             return true;
         }
 
-        private string GenerateRandomKey() 
+        private string GenerateRandomKey()
         {
-            // Generate a 32-byte random key and convert to Base64
             byte[] randomBytes = new byte[32];
             using (var rng = RandomNumberGenerator.Create())
             {
@@ -79,6 +113,11 @@ namespace BlogService.Repository
                 .Replace("/", "")
                 .Replace("+", "")
                 .Substring(0, 40);
+        }
+
+        public async Task<IEnumerable<ApiKey>> GetAllApiKeys()
+        {
+            return await _context.ApiKeys.ToListAsync();
         }
     }
 }

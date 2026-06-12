@@ -21,22 +21,23 @@ namespace BlogService.Repository.Auth
         }
         public async Task<string> Login(string Email, string password)
         {
-            var query = _context.Users
+            var query = await _context.Users
+    .FirstOrDefaultAsync(u => u.Email == Email);
 
-                .FirstOrDefault(u => u.Email == Email);
-
-
+            if (query == null)
+                return null;
 
             if (!BCrypt.Net.BCrypt.Verify(password, query.PasswordHash))
                 return null;
-
-            return GenerateJwtToken(query.Email, query.Role);
+            
+            return GenerateJwtToken(query.Id, query.Email, query.Role);
         }
 
-        public string GenerateJwtToken(string email, string role) 
+        public string GenerateJwtToken(Guid userId, string email, string role) 
         {
             var claims = new[]
             {
+                    new Claim(ClaimTypes.NameIdentifier, userId.ToString()), // User Id
                     new Claim(ClaimTypes.Name, email),
                     new Claim(ClaimTypes.Role, role)
                 };

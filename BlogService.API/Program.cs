@@ -40,6 +40,10 @@ builder.Services.AddDbContext<BlogDbContext>(options =>
 
 // Repositories and Services
 builder.Services.AddScoped<ITenantService, TenantService>();
+// ✅ Required for IHttpContextAccessor (used by CurrentUserService)
+builder.Services.AddHttpContextAccessor();
+// ✅ Register CurrentUserService
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped< ITokenRepository, AuthRepository >();
@@ -50,9 +54,12 @@ builder.Services.AddScoped<ICommentRepository, CommentRepository>();
 builder.Services.AddScoped<ICommentService, CommentService>();
 // ✅ ADD THIS LINE — was missing
 builder.Services.AddScoped<IMediaService, MediaService>();
-// Exception Handler
+
+// ✅ CHANGED: Exposes real inner exception instead of generic 500
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
+
+
 
 // JWT Authentication 
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
@@ -76,7 +83,6 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = jwtSettings["Issuer"],
         ValidAudience = jwtSettings["Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(key),
-
         RoleClaimType = ClaimTypes.Role  // ✅ Maps to the full schema URI in your token
     };
 });
@@ -86,6 +92,16 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Blog Service Admin API", Version = "v1" });
+
+    // ✅ ADDED — forces GET → POST → PUT → DELETE order in Swagger
+    c.OrderActionsBy(apiDesc => $"{apiDesc.ActionDescriptor.RouteValues["controller"]}_{apiDesc.HttpMethod switch
+    {
+        "GET" => "1",
+        "POST" => "2",
+        "PUT" => "3",
+        "DELETE" => "4",
+        _ => "5"
+    }}");
 
     // JWT Security
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -118,21 +134,72 @@ builder.Services.AddSwaggerGen(c =>
     c.OperationFilter<TenantHeaderOperationFilter>();
 });
 
+//// Configure CORS
+//builder.Services.AddCors(options =>
+//{
+//    options.AddPolicy("AllowPortal", policy =>
+//    {
+//        policy.WithOrigins("http://localhost:3000","https://blogops-platform.vercel.app","https://blog-admin-panel-alpha.vercel.app", "http://localhost:3001")
+//              .AllowAnyHeader()
+//              .AllowAnyMethod();
+//    });
+//});
+
 // Configure CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowPortal", policy =>
     {
-        policy.WithOrigins("http://localhost:3000","https://blogops-platform.vercel.app","https://blog-admin-panel-alpha.vercel.app")
-              .AllowAnyHeader()
-              .AllowAnyMethod();
+        policy.SetIsOriginAllowed(origin =>
+        {
+            if (string.IsNullOrWhiteSpace(origin))
+                return false;
+
+            if (Uri.TryCreate(origin, UriKind.Absolute, out var uri))
+            {
+                // Allow all localhost ports
+                if (uri.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase))
+                    return true;
+
+                // Allow all *.vercel.app domains
+                if (uri.Host.EndsWith(".vercel.app", StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
+
+            return false;
+        })
+        .AllowAnyHeader()
+        .AllowAnyMethod();
+    });
+});
+
+var app = builder.Build();
+
+
+// ✅ CHANGED: Shows real inner exception message in response
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        var error = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>();
+        if (error != null)
+        {
+            context.Response.ContentType = "application/json";
+            context.Response.StatusCode = 500;
+            await context.Response.WriteAsJsonAsync(new
+            {
+                title = "Server Error",
+                status = 500,
+                detail = error.Error.Message,
+                innerException = error.Error.InnerException?.Message,           // 👈 real cause
+                innerInnerException = error.Error.InnerException?.InnerException?.Message  // 👈 SQL error
+            });
+        }
     });
 });
 
 
-var app = builder.Build();
 
-app.UseExceptionHandler();
 
 // Configure the HTTP request pipeline.
 app.UseCors("AllowPortal");

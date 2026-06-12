@@ -13,6 +13,8 @@ namespace BlogService.Core.DTOs
         public Guid AuthorId { get; set; }
         public bool IsPublished { get; set; }
         public DateTime CreatedAt { get; set; }
+        public string? CreatedBy { get; set; }  // ✅ ADD THIS LINE
+
     }
 
     public class CreateBlogDto
