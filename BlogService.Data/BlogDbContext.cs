@@ -10,11 +10,12 @@ namespace BlogService.Data
     public class BlogDbContext : DbContext
     {
         private readonly ITenantService _tenantService;
-
-        public BlogDbContext(DbContextOptions<BlogDbContext> options, ITenantService tenantService)
+        private readonly ICurrentUserService _currentUserService; // ✅ ADD THIS
+        public BlogDbContext(DbContextOptions<BlogDbContext> options, ITenantService tenantService, ICurrentUserService currentUserService) // ✅ ADD THIS PARAMETER
             : base(options)
         {
             _tenantService = tenantService;
+            _currentUserService = currentUserService; // ✅ ADD THIS
         }
 
         public DbSet<Tenant> Tenants { get; set; }
@@ -28,30 +29,65 @@ namespace BlogService.Data
         public DbSet<PageView> PageViews { get; set; }
         public DbSet<Like> Likes { get; set; }
 
-
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            string tenantId = _tenantService.GetTenantId();
+            // ❌ REMOVED: string tenantId = _tenantService.GetTenantId();
+            // Wrong to call GetTenantId() at model-build time
 
+            // ─────────────────────────────────────────────────────────────
             // Global Query Filters for Multi-Tenancy
-            // This ensures we never accidentally bleed data across tenants.
-            // The tenantId is dynamically evaluated when queries are executed.
-            modelBuilder.Entity<Blog>().HasQueryFilter(e => string.IsNullOrEmpty(_tenantService.GetTenantId()) || EF.Property<string>(e, "TenantId") == _tenantService.GetTenantId());
-            modelBuilder.Entity<Category>().HasQueryFilter(e => EF.Property<string>(e, "TenantId") == _tenantService.GetTenantId());
-            modelBuilder.Entity<Tag>().HasQueryFilter(e => EF.Property<string>(e, "TenantId") == _tenantService.GetTenantId());
-            modelBuilder.Entity<Comment>().HasQueryFilter(e => EF.Property<string>(e, "TenantId") == _tenantService.GetTenantId());
-            // AFTER
-            modelBuilder.Entity<Media>().HasQueryFilter(e => string.IsNullOrEmpty(_tenantService.GetTenantId()) || EF.Property<string>(e, "TenantId") == _tenantService.GetTenantId());
-            modelBuilder.Entity<PageView>().HasQueryFilter(e => EF.Property<string>(e, "TenantId") == _tenantService.GetTenantId());
-            modelBuilder.Entity<Like>().HasQueryFilter(e => EF.Property<string>(e, "TenantId") == _tenantService.GetTenantId());
+            // tenantId is dynamically evaluated when queries are executed.
+            // ─────────────────────────────────────────────────────────────
 
-            // ✅ ADD THIS — hides soft-deleted records from ALL queries automatically
+            // ✅ ApiKey — null-safe filter (NEWLY ADDED)
+            modelBuilder.Entity<ApiKey>().HasQueryFilter(e =>
+                string.IsNullOrEmpty(_tenantService.GetTenantId()) ||
+                EF.Property<string>(e, "TenantId") == _tenantService.GetTenantId());
+
+            // ✅ Blog — already null-safe (no change)
+            modelBuilder.Entity<Blog>().HasQueryFilter(e =>
+                string.IsNullOrEmpty(_tenantService.GetTenantId()) ||
+                EF.Property<string>(e, "TenantId") == _tenantService.GetTenantId());
+
+            // ✅ Category — FIXED: added null-safe check
+            modelBuilder.Entity<Category>().HasQueryFilter(e =>
+                string.IsNullOrEmpty(_tenantService.GetTenantId()) ||
+                EF.Property<string>(e, "TenantId") == _tenantService.GetTenantId());
+
+            // ✅ Tag — FIXED: added null-safe check
+            modelBuilder.Entity<Tag>().HasQueryFilter(e =>
+                string.IsNullOrEmpty(_tenantService.GetTenantId()) ||
+                EF.Property<string>(e, "TenantId") == _tenantService.GetTenantId());
+
+            // ✅ Comment — FIXED: added null-safe check
+            modelBuilder.Entity<Comment>().HasQueryFilter(e =>
+                string.IsNullOrEmpty(_tenantService.GetTenantId()) ||
+                EF.Property<string>(e, "TenantId") == _tenantService.GetTenantId());
+
+            // ✅ Media — already null-safe (no change)
+            modelBuilder.Entity<Media>().HasQueryFilter(e =>
+                string.IsNullOrEmpty(_tenantService.GetTenantId()) ||
+                EF.Property<string>(e, "TenantId") == _tenantService.GetTenantId());
+
+            // ✅ PageView — FIXED: added null-safe check
+            modelBuilder.Entity<PageView>().HasQueryFilter(e =>
+                string.IsNullOrEmpty(_tenantService.GetTenantId()) ||
+                EF.Property<string>(e, "TenantId") == _tenantService.GetTenantId());
+
+            // ✅ Like — FIXED: added null-safe check
+            modelBuilder.Entity<Like>().HasQueryFilter(e =>
+                string.IsNullOrEmpty(_tenantService.GetTenantId()) ||
+                EF.Property<string>(e, "TenantId") == _tenantService.GetTenantId());
+
+            // ✅ User — hides soft-deleted records from ALL queries automatically
             modelBuilder.Entity<User>().HasQueryFilter(e => !e.IsDeleted);
 
-            // User entity isolation strategy (some systems share users, some don't. We'll isolate).
+            // ─────────────────────────────────────────────────────────────
             // Many-to-Many Relationships
+            // ─────────────────────────────────────────────────────────────
+
             modelBuilder.Entity<Blog>()
                 .HasMany(b => b.Categories)
                 .WithMany(c => c.Blogs)
@@ -61,6 +97,10 @@ namespace BlogService.Data
                 .HasMany(b => b.Tags)
                 .WithMany(t => t.Blogs)
                 .UsingEntity(j => j.ToTable("BlogTags"));
+
+            // ─────────────────────────────────────────────────────────────
+            // Unique Indexes
+            // ─────────────────────────────────────────────────────────────
 
             // Unique Slugs per Tenant
             modelBuilder.Entity<Blog>()
@@ -74,7 +114,8 @@ namespace BlogService.Data
             modelBuilder.Entity<Tag>()
                 .HasIndex(t => new { t.TenantId, t.Slug })
                 .IsUnique();
-                
+
+            // Unique Tenant Identifier
             modelBuilder.Entity<Tenant>()
                 .HasIndex(t => t.Identifier)
                 .IsUnique();
@@ -96,22 +137,46 @@ namespace BlogService.Data
         {
             var entries = ChangeTracker.Entries<BaseEntity>();
             var tenantId = _tenantService.GetTenantId();
+            var currentUser = _currentUserService.GetCurrentUser(); // ✅ ADD THIS
 
             foreach (var entry in entries)
             {
                 if (entry.State == EntityState.Added)
                 {
                     entry.Entity.CreatedAt = DateTime.UtcNow;
-                    entry.Entity.UpdatedAt = DateTime.UtcNow; // ✅ ADD THIS LINE
+                    entry.Entity.UpdatedAt = DateTime.UtcNow;
 
-                    // Automatically attach TenantId to entities that belong to a tenant
-                    var tenantProperty = entry.Entity.GetType().GetProperty("TenantId");
-                    if (tenantProperty != null)
+                    // ✅ ADD THIS BLOCK — set CreatedBy only on insert, never overwrite
+                    if (entry.Entity.CreatedBy == null && currentUser != null)
                     {
-                        var currentTenantId = tenantProperty.GetValue(entry.Entity)?.ToString();
-                        if (string.IsNullOrEmpty(currentTenantId) && !string.IsNullOrEmpty(tenantId))
+                        entry.Entity.CreatedBy = currentUser;
+                    }
+
+                    // Automatically attach TenantId to entities that have the property
+                    var tenantProperty = entry.Entity.GetType().GetProperty("TenantId");
+                    if (tenantProperty != null && !string.IsNullOrEmpty(tenantId))
+                    {
+                        var currentTenantValue = tenantProperty.GetValue(entry.Entity);
+                        var propertyType = tenantProperty.PropertyType;
+
+                        // Check if current value is already set
+                        bool isEmpty = currentTenantValue == null ||
+                                       currentTenantValue.Equals(Guid.Empty) ||
+                                       currentTenantValue.Equals(string.Empty);
+
+                        if (isEmpty)
                         {
-                            tenantProperty.SetValue(entry.Entity, tenantId);
+                            // ✅ If property is Guid or Guid?, parse the string tenantId
+                            if (propertyType == typeof(Guid) || propertyType == typeof(Guid?))
+                            {
+                                if (Guid.TryParse(tenantId, out var tenantGuid))
+                                    tenantProperty.SetValue(entry.Entity, tenantGuid);
+                            }
+                            // ✅ If property is string, set directly
+                            else if (propertyType == typeof(string))
+                            {
+                                tenantProperty.SetValue(entry.Entity, tenantId);
+                            }
                         }
                     }
                 }

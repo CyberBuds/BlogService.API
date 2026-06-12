@@ -9,5 +9,6 @@ namespace BlogService.Core.Entities
         public DateTime? UpdatedAt { get; set; }
 
         public bool IsDeleted { get; set; } = false; // ✅ ADD THIS LINE
+        public string? CreatedBy { get; set; }  // ✅ ADD THIS LINE
     }
 }

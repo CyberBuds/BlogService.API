@@ -10,7 +10,7 @@ namespace BlogService.API.Controllers
 {
     [ApiController]
     [Route("api/v1/admin/tenants")]
-    [Authorize(Roles = "Admin,SuperAdmin,superadmin,admin")]
+    [Authorize(Roles = "Admin,SuperAdmin,superadmin,admin,User,user")]
     public class TenantController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;

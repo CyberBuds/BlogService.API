@@ -10,6 +10,7 @@ namespace BlogService.Core.DTOs
         public string Content { get; set; } = string.Empty;
         public bool IsApproved { get; set; }
         public DateTime CreatedAt { get; set; }  // ✅ ADD THIS
+        public string? CreatedBy { get; set; }  // ✅ ADD THIS LINE
     }
 
     public class CreateCommentDto

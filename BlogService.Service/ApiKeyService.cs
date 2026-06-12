@@ -1,4 +1,5 @@
-﻿using BlogService.Core.Interfaces;
+﻿using BlogService.Core.Entities;
+using BlogService.Core.Interfaces;
 using BlogService.Service.Interface;
 using System;
 using System.Threading.Tasks;
@@ -27,6 +28,17 @@ namespace BlogService.Service
         public async Task<bool> DeleteApiKey(string apiKey)
         {
             return await _apiKeyRepository.DeleteApiKey(apiKey);
+        }
+
+        public async Task<IEnumerable<ApiKey>> GetAllApiKeys()
+        {
+            return await _apiKeyRepository.GetAllApiKeys();
+        }
+
+        // ✅ Keep only this:
+        public async Task<string?> UpdateApiKey(Guid id, string? name, bool isActive)
+        {
+            return await _apiKeyRepository.UpdateApiKey(id, name, isActive);
         }
     }
 }
