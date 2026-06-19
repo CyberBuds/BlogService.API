@@ -36,7 +36,7 @@ builder.Services.AddControllers();
 
 // Database
 builder.Services.AddDbContext<BlogDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));  
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Repositories and Services
 builder.Services.AddScoped<ITenantService, TenantService>();
@@ -46,7 +46,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-builder.Services.AddScoped< ITokenRepository, AuthRepository >();
+builder.Services.AddScoped<ITokenRepository, AuthRepository>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IApiKeyRepository, ApiKeyRepository>();
 builder.Services.AddScoped<IApiKeyService, ApiKeyService>();
@@ -64,7 +64,7 @@ builder.Services.AddProblemDetails();
 // JWT Authentication 
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey = jwtSettings["Key"];
-if(string.IsNullOrEmpty(secretKey)) secretKey = "SuperSecretKeyThatMustBeAtLeast32BytesLong!";
+if (string.IsNullOrEmpty(secretKey)) secretKey = "SuperSecretKeyThatMustBeAtLeast32BytesLong!";
 var key = Encoding.ASCII.GetBytes(secretKey);
 
 builder.Services.AddAuthentication(options =>
@@ -113,6 +113,16 @@ builder.Services.AddSwaggerGen(c =>
         Scheme = "Bearer"
     });
 
+    // API Key security definition
+    c.AddSecurityDefinition("ApiKeyAuth", new OpenApiSecurityScheme
+    {
+        Description = "API Key for public endpoints. Example: \"X-API-Key: {your_key}\"",
+        Name = "X-API-Key",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "ApiKeyScheme"
+    });
+
     c.AddSecurityRequirement(new OpenApiSecurityRequirement()
     {
         {
@@ -126,6 +136,17 @@ builder.Services.AddSwaggerGen(c =>
                 Scheme = "oauth2",
                 Name = "Bearer",
                 In = ParameterLocation.Header,
+            },
+            new List<string>()
+        },
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "ApiKeyAuth"
+                }
             },
             new List<string>()
         }
@@ -203,14 +224,14 @@ app.UseExceptionHandler(errorApp =>
 
 // Configure the HTTP request pipeline.
 app.UseCors("AllowPortal");
-    app.UseSwagger();
-    app.UseSwaggerUI();
+app.UseSwagger();
+app.UseSwaggerUI();
 
 
 app.UseHttpsRedirection();
 
 // Enable CORS explicitly
-            
+
 
 // Use Tenant Middleware
 app.UseMiddleware<TenantMiddleware>();
