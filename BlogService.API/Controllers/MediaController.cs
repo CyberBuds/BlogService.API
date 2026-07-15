@@ -61,6 +61,7 @@ namespace BlogService.API.Controllers
         }
 
         [HttpDelete("{id}")]
+        [ApiExplorerSettings(GroupName = "admin")]
         public async Task<IActionResult> Delete(Guid id)
         {
             var deleted = await _mediaService.DeleteAsync(id);

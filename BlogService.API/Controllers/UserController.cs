@@ -12,6 +12,7 @@ namespace BlogService.API.Controllers
     [ApiController]
     [Route("api/v1/admin/users")]
     [Authorize(Roles = "Admin,SuperAdmin,admin,superadmin")]
+    [ApiExplorerSettings(GroupName = "admin")]   // <-- added here    
     public class UserController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;

@@ -7,6 +7,7 @@ namespace BlogService.API.Controllers
 {
     [ApiController]
     [Route("api/v1/[controller]")]
+    [ApiExplorerSettings(GroupName = "admin")]
     public class SystemController : ControllerBase
     {
         private readonly IConfiguration _config;

@@ -11,6 +11,7 @@ namespace BlogService.API.Controllers
     [ApiController]
     [Route("api/v1/admin/tenants")]
     [Authorize(Roles = "Admin,SuperAdmin,superadmin,admin,User,user")]
+    [ApiExplorerSettings(GroupName = "admin")]   // <-- added here
     public class TenantController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;

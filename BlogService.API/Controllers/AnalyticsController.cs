@@ -6,6 +6,7 @@ namespace BlogService.API.Controllers
 {
     [ApiController]
     [Route("api/v1/analytics")]
+    [ApiExplorerSettings(GroupName = "admin")]
     public class AnalyticsController : ControllerBase
     {
         [HttpGet("blog/{id}/views")]
