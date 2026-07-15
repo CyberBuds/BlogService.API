@@ -30,6 +30,8 @@ namespace BlogService.API.Controllers
         /// Do NOT pass TenantId — it is ignored even if provided.
         /// </summary>
         [HttpPost("upload")]
+        [ApiExplorerSettings(GroupName = "admin")]
+
         public async Task<IActionResult> Upload([FromBody] UploadMediaRequest request)
         {
             if (request.BlogId == Guid.Empty)
