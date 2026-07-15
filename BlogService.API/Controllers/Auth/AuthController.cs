@@ -14,6 +14,7 @@ namespace BlogService.API.Controllers.Auth
 {
     [ApiController]
     [Route("api/v1/auth")]
+    [ApiExplorerSettings(GroupName = "admin")]
     public class AuthController : ControllerBase
     {
         private readonly ITokenService _tokenService;

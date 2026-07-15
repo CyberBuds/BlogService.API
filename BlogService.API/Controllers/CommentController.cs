@@ -54,6 +54,7 @@ namespace BlogService.API.Controllers
         }
 
         [HttpPut("{id}")]
+        [ApiExplorerSettings(GroupName = "admin")]
         public async Task<IActionResult> Update(Guid id, [FromBody] CreateCommentDto dto)
         {
             var comment = await _unitOfWork.Repository<Comment>().GetByIdAsync(id);
@@ -78,6 +79,7 @@ namespace BlogService.API.Controllers
         }
 
         [HttpDelete("{id}")]
+        [ApiExplorerSettings(GroupName = "admin")]
         public async Task<IActionResult> Delete(Guid id)
         {
             var comment = await _unitOfWork.Repository<Comment>().GetByIdAsync(id);
@@ -96,6 +98,7 @@ namespace BlogService.API.Controllers
     [ApiController]
     [Route("api/v1/admin/comments")]
     [Authorize(Roles = "Admin,Editor,SuperAdmin,admin,superadmin,editor")]
+    [ApiExplorerSettings(GroupName = "admin")]   // <-- added here
     public class AdminCommentController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;

@@ -11,6 +11,7 @@ namespace BlogService.API.Controllers
     [ApiController]
     [Route("api/v1/apikeys")]
     [Authorize]  // User must be logged in
+    [ApiExplorerSettings(GroupName = "admin")]
     public class ApiKeyController : ControllerBase
     {
         private readonly IApiKeyService _apiKeyService;
@@ -24,7 +25,6 @@ namespace BlogService.API.Controllers
 
         // ── 1. GET ──────────────────────────────────
         [HttpGet]
-        [ApiExplorerSettings(GroupName = "v1")]
         [HttpGet, Produces("application/json")]
         public async Task<IActionResult> GetAllApiKeys()
         {
