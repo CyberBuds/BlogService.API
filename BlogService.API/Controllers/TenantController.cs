@@ -4,6 +4,7 @@ using BlogService.Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace BlogService.API.Controllers
@@ -58,6 +59,21 @@ namespace BlogService.API.Controllers
             };
 
             await _unitOfWork.Repository<Tenant>().AddAsync(tenant);
+
+            // ✅ Link this tenant to the user who created it. Without this, there is
+            // no server-side way to know "which tenant does this logged-in user
+            // belong to" — the frontend was left guessing via localStorage, which
+            // breaks on any other browser/device/session.
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (Guid.TryParse(userIdClaim, out var userId))
+            {
+                var currentUser = await _unitOfWork.Repository<User>().GetByIdAsync(userId);
+                if (currentUser != null)
+                {
+                    currentUser.TenantId = tenant.Id.ToString();
+                }
+            }
+
             await _unitOfWork.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetById), new { id = tenant.Id }, tenant);

@@ -40,6 +40,7 @@ namespace BlogService.Repository
         {
             string apiKey = GenerateRandomKey();
             var tenantId = _tenantService.GetTenantId();
+            Console.WriteLine($"TenantService Value = {tenantId}");
 
             var newApiKey = new ApiKey
             {
@@ -118,6 +119,7 @@ namespace BlogService.Repository
         public async Task<IEnumerable<ApiKey>> GetAllApiKeys()
         {
             return await _context.ApiKeys.ToListAsync();
+            Console.WriteLine($"Current Tenant = {_tenantService.GetTenantId()}");
         }
     }
 }
