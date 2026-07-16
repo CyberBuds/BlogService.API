@@ -32,8 +32,8 @@ namespace BlogService.API.Controllers.Auth
 
             var res = await _tokenService.Login(Email, password);
             return Ok(res);
-            
-           
+
+
         }
 
 
