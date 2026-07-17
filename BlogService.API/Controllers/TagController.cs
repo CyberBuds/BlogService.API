@@ -40,7 +40,7 @@ namespace BlogService.API.Controllers
 
     [ApiController]
     [Route("api/v1/admin/tags")]
-    [Authorize(Roles = "Admin,Editor,SuperAdmin,admin,superadmin,user,User,editor,Editor")]
+    [Authorize(Roles = "Admin,Editor,SuperAdmin,admin,superadmin,user,User,editor")]
     [ApiExplorerSettings(GroupName = "admin")]
     public class AdminTagsController : ControllerBase
     {
