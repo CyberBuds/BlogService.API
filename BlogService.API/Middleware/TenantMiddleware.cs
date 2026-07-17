@@ -35,8 +35,8 @@ namespace BlogService.API.Middleware
             var isTenantOptional = _tenantOptionalPathPrefixes.Any(
                 prefix => path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase));
 
-            if (!context.Request.Headers.TryGetValue("TenantId", out var tenantIdValues) ||
-                string.IsNullOrWhiteSpace(tenantIdValues.ToString()))
+            if (!context.Request.Headers.TryGetValue("x-api-key", out var apiKeyValues) ||
+     string.IsNullOrWhiteSpace(apiKeyValues))
             {
                 if (isTenantOptional)
                 {
@@ -44,18 +44,48 @@ namespace BlogService.API.Middleware
                     return;
                 }
 
-                _logger.LogWarning("TenantId header is missing for {Path}.", path);
-                await WriteProblemAsync(context, StatusCodes.Status400BadRequest,
-                    "Tenant Required", "The 'TenantId' header is required for this endpoint.");
+                await WriteProblemAsync(
+                    context,
+                    StatusCodes.Status401Unauthorized,
+                    "API Key Required",
+                    "The 'x-api-key' header is required.");
                 return;
             }
-            var tenantId = tenantIdValues.ToString().Trim();
+
+            var apiKey = apiKeyValues.ToString().Trim();
+
+            var apiKeyEntity = await dbContext.ApiKeys
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x =>
+                    x.Key == apiKey &&
+                    x.IsActive);
+
+            if (apiKeyEntity == null)
+            {
+                await WriteProblemAsync(
+                    context,
+                    StatusCodes.Status401Unauthorized,
+                    "Invalid API Key",
+                    "API Key is invalid.");
+                return;
+            }
+
+            // Convert TenantId string to Guid
+            if (!Guid.TryParse(apiKeyEntity.TenantId, out Guid tenantGuid))
+            {
+                await WriteProblemAsync(
+                    context,
+                    StatusCodes.Status400BadRequest,
+                    "Invalid Tenant",
+                    "TenantId stored in API Key is not a valid GUID.");
+                return;
+            }
 
             var tenant = await dbContext.Tenants
                 .AsNoTracking()
                 .FirstOrDefaultAsync(t =>
                     !t.IsDeleted &&
-                    t.Id.ToString() == tenantId);
+                    t.Id == tenantGuid);
 
             if (tenant == null)
             {
@@ -63,8 +93,7 @@ namespace BlogService.API.Middleware
                     context,
                     StatusCodes.Status404NotFound,
                     "Tenant Not Found",
-                    "Invalid TenantId."
-                );
+                    "No tenant is associated with this API key.");
                 return;
             }
 
