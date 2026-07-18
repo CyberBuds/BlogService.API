@@ -41,6 +41,12 @@ namespace BlogService.API.Middleware
             {
                 if (isTenantOptional)
                 {
+                    if (context.Request.Headers.TryGetValue("TenantId", out var tenantIdValues) &&
+                        !string.IsNullOrWhiteSpace(tenantIdValues))
+                    {
+                        tenantService.SetTenantId(tenantIdValues.ToString().Trim());
+                    }
+
                     await _next(context);
                     return;
                 }
