@@ -36,10 +36,13 @@ namespace BlogService.API.Middleware
             var isTenantOptional = _tenantOptionalPathPrefixes.Any(
                 prefix => path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase));
 
+            var hasAuthHeader = context.Request.Headers.TryGetValue("Authorization", out var authValues) &&
+                !string.IsNullOrWhiteSpace(authValues);
+
             if (!context.Request.Headers.TryGetValue("x-api-key", out var apiKeyValues) ||
      string.IsNullOrWhiteSpace(apiKeyValues))
             {
-                if (isTenantOptional)
+                if (isTenantOptional || hasAuthHeader)
                 {
                     if (context.Request.Headers.TryGetValue("TenantId", out var tenantIdValues) &&
                         !string.IsNullOrWhiteSpace(tenantIdValues))
