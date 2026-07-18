@@ -20,7 +20,8 @@ namespace BlogService.API.Middleware
             "/api/v1/system",
             "/api/v1/health",
             "/api/v1/admin/tenants",
-            "/api/v1/auth"
+            "/api/v1/auth",
+            "/api/v1/apikeys"
         };
 
         public TenantMiddleware(RequestDelegate next, ILogger<TenantMiddleware> logger)
